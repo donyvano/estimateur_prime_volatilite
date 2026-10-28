@@ -1,0 +1,22 @@
+# Single source of truth for every parameter of the project.
+seed: 42
+
+data:
+  start_date: "2005-01-01"
+  end_date: null            # null = today
+  index_ticker: "^GSPC"     # S&P 500 index -> realized volatility
+  etf_ticker: "SPY"         # tradable ETF tracking the S&P 500
+  vix_ticker: "^VIX"        # 30-day implied volatility of the S&P 500
+  options_ticker: "SPY"     # option chain snapshot -> smile / surface
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+
+volatility:
+  window: 21                # ~1 trading month
+  trading_days: 252         # annualisation factor
+
+web:
+  export_dir: "web/data"
+
+logging:
+  level: "INFO"
