@@ -19,3 +19,6 @@ plotly>=5.22
 # Dev
 pytest>=8.2
 ruff>=0.6
+
+# This project (src/vrp) in editable mode
+-e .

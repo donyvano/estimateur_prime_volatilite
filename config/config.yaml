@@ -7,13 +7,59 @@ data:
   index_ticker: "^GSPC"     # S&P 500 index -> realized volatility
   etf_ticker: "SPY"         # tradable ETF tracking the S&P 500
   vix_ticker: "^VIX"        # 30-day implied volatility of the S&P 500
+  rate_ticker: "^IRX"       # 13-week T-bill yield (%) -> risk-free rate
   options_ticker: "SPY"     # option chain snapshot -> smile / surface
+  options_max_days: 400     # only download expiries up to ~13 months
+  max_gap_days: 5           # max calendar days between two trading days
   raw_dir: "data/raw"
   processed_dir: "data/processed"
 
 volatility:
   window: 21                # ~1 trading month
   trading_days: 252         # annualisation factor
+
+options:
+  # Liquidity filters applied before inverting Black-Scholes (step 4).
+  min_days: 7               # very short maturities: IV explodes / noisy
+  max_days: 400
+  min_price: 0.10           # far from the $0.01 tick
+  min_bid: 0.05             # quoted on both sides
+  max_rel_spread: 0.25      # (ask - bid) / mid
+  min_open_interest: 10
+  moneyness_min: 0.75       # K / F
+  moneyness_max: 1.25
+  surface_moneyness_grid: [0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.20]
+
+premium:
+  horizon: 21               # VIX horizon = 30 calendar days ~ 21 trading days
+  crises:
+    - { name: "Global Financial Crisis", start: "2008-09-01", end: "2009-03-31" }
+    - { name: "US downgrade / Euro crisis", start: "2011-07-25", end: "2011-10-31" }
+    - { name: "Volmageddon", start: "2018-02-01", end: "2018-02-28" }
+    - { name: "Covid crash", start: "2020-02-20", end: "2020-04-30" }
+    - { name: "2022 bear market", start: "2022-01-03", end: "2022-10-31" }
+    - { name: "Tariff shock", start: "2025-04-01", end: "2025-05-15" }
+
+forecast:
+  first_test_year: 2010     # walk-forward: expanding window, refit every year
+  har_lags: [1, 5, 22]      # daily, weekly, monthly components (Corsi, 2009)
+  lightgbm:
+    n_estimators: 400
+    learning_rate: 0.03
+    num_leaves: 15
+    min_child_samples: 50
+    subsample: 0.8
+    subsample_freq: 1
+    colsample_bytree: 0.8
+    reg_lambda: 1.0
+
+backtest:
+  model: "lightgbm"         # forecast used by the conditional strategy
+  threshold_vol_points: 2.0 # sell only if VIX - forecast RV > threshold (fixed a priori)
+  vega_pct: 0.5             # % of capital gained/lost per vol point of P&L
+  cost_vol_points: 0.5      # round-trip cost per trade, in vol points
+  cap_multiple: 2.5         # realized vol capped at 2.5 x strike (market standard)
+  sensitivity_thresholds: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
 
 web:
   export_dir: "web/data"

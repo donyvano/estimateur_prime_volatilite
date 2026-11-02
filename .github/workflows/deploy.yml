@@ -1,8 +1,11 @@
 name: Deploy website
 
-# Manual trigger only until the first version of the site ships (end of V1).
-# Then add:  push: { branches: [main], paths: ["web/**"] }
+# Publishes web/ (static site + JSON exported by `python -m vrp.pipeline`) on GitHub Pages.
+# One-time setup: repo Settings > Pages > Source: "GitHub Actions".
 on:
+  push:
+    branches: [main]
+    paths: ["web/**"]
   workflow_dispatch:
 
 permissions:
